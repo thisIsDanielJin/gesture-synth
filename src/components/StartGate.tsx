@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 interface Props {
   onStart: () => void;
 }
@@ -8,18 +10,29 @@ export function StartGate({ onStart }: Props) {
       <div className="start-gate-card">
         <h1>gesture-synth</h1>
         <p>
-          Hand-tracked controller for an internal Tone.js synth.
-          <br />
-          Left hand → filter (X = cutoff, Y = resonance), pinch = reverb wet.
-          <br />
-          Right hand → delay (X = time, Y = feedback), pinch = volume.
-          <br />
-          Make a fist with either hand to mute.
+          A hand-tracked instrument. Switch modes from the dropdown in the
+          top-right (or press <kbd>1</kbd>/<kbd>2</kbd>) to play different
+          synths with the same hands.
         </p>
+        <Modes />
         <button className="primary" onClick={onStart}>
           Start camera + audio
         </button>
       </div>
     </div>
+  );
+}
+
+function Modes(): ReactNode {
+  return (
+    <ul className="start-modes">
+      <li>
+        <strong>Theremin</strong> — right hand height = pitch, pinch = volume.
+      </li>
+      <li>
+        <strong>Pad Sculptor</strong> — both hands. Spread = chord brightness,
+        pinch = shimmer, fist = freeze.
+      </li>
+    </ul>
   );
 }
