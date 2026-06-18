@@ -156,9 +156,9 @@ function drawOverlay({ ctx, width, height, left, right }: ModeOverlayProps): voi
 
   // Right-hand pitch indicator: thick glowing line + halo.
   if (right) {
-    // Overlay reads centroid.x which is already mirrored for param mapping;
-    // flip back so the halo lands on the visible hand.
-    const handX = (1 - right.centroid.x) * width;
+    // centroid.x is already mirrored for parameter mapping; canvas is NOT
+    // mirrored, so drawing at centroid.x * width lands on the visible hand.
+    const handX = right.centroid.x * width;
     const handY = right.centroid.y * height;
     const continuousMidi = linMap(1 - right.centroid.y, 0, 1, MIN_MIDI, MAX_MIDI);
     const freePitch = left ? left.pinch > 0.7 : false;
@@ -187,7 +187,7 @@ function drawOverlay({ ctx, width, height, left, right }: ModeOverlayProps): voi
 
   // Left-hand vibrato indicator: a small horizontal sine ribbon at hand pos.
   if (left && !left.fist) {
-    const lx = (1 - left.centroid.x) * width;
+    const lx = left.centroid.x * width;
     const ly = left.centroid.y * height;
     const rate = linMap(1 - left.centroid.x, 0, 1, 0, 10);
     const depth = linMap(1 - left.centroid.x, 0, 1, 4, 26);

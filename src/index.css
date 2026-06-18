@@ -43,6 +43,12 @@ html, body, #root {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* Mirror the video so it feels like a mirror; the canvas stays un-mirrored
+   so on-screen text, meters, and the step strip read correctly. The skeleton
+   draw code flips x to land on the mirrored hand. */
+.camera-stage video {
   transform: scaleX(-1);
 }
 

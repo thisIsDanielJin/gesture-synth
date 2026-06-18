@@ -166,11 +166,10 @@ function drawOverlay({ ctx, width, height, left, right }: ModeOverlayProps): voi
   // Canvas is already mirrored by CSS.
 
   if (left && right) {
-    // Overlay reads centroid.x which is mirrored for mapping; flip back so
-    // the cloud lands on the visible hands.
-    const lx = (1 - left.centroid.x) * width;
+    // centroid.x is already mirrored; canvas is NOT mirrored.
+    const lx = left.centroid.x * width;
     const ly = left.centroid.y * height;
-    const rx = (1 - right.centroid.x) * width;
+    const rx = right.centroid.x * width;
     const ry = right.centroid.y * height;
 
     // The cloud lives at the midpoint, scaled by hand distance.
@@ -216,7 +215,7 @@ function drawOverlay({ ctx, width, height, left, right }: ModeOverlayProps): voi
     }
   } else if (left || right) {
     const h = (left ?? right)!;
-    const x = (1 - h.centroid.x) * width;
+    const x = h.centroid.x * width;
     const y = h.centroid.y * height;
     const grad = ctx.createRadialGradient(x, y, 5, x, y, 140);
     grad.addColorStop(0, 'hsla(220, 80%, 70%, 0.4)');

@@ -2,8 +2,9 @@
  * Simple line + dot hand skeleton.
  *
  * Draws the 21-point MediaPipe skeleton as plain colored lines with small
- * solid dots at each joint. The canvas itself is already mirrored by CSS
- * (transform: scaleX(-1)), so this draws in normal landmark coordinates.
+ * solid dots at each joint. The video is mirrored by CSS but the canvas is
+ * NOT — so we mirror x ourselves here so the skeleton lands on the visible
+ * (mirrored) hand.
  */
 
 import type { Hand } from './gestures';
@@ -47,15 +48,15 @@ export function drawSkeleton({
     const pa = hand[a];
     const pb = hand[b];
     if (!pa || !pb) continue;
-    ctx.moveTo(pa.x * width, pa.y * height);
-    ctx.lineTo(pb.x * width, pb.y * height);
+    ctx.moveTo((1 - pa.x) * width, pa.y * height);
+    ctx.lineTo((1 - pb.x) * width, pb.y * height);
   }
   ctx.stroke();
 
   // Joint dots.
   for (const p of hand) {
     ctx.beginPath();
-    ctx.arc(p.x * width, p.y * height, 4, 0, Math.PI * 2);
+    ctx.arc((1 - p.x) * width, p.y * height, 4, 0, Math.PI * 2);
     ctx.fill();
   }
 
