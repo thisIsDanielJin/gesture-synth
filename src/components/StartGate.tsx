@@ -40,7 +40,7 @@ function Modes(): ReactNode {
       </li>
       <li>
         <strong>Drum Machine</strong> — 16-step grid across 6 voices, 5
-        preset grooves. Right hand: kick pitch, snare snap, low-pass
+        preset grooves. Right hand: kick pitch, snare snap, high-pass
         filter. Left hand: tempo, hat brightness, reverb. Right fist
         cycles patterns.
       </li>

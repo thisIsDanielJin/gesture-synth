@@ -6,7 +6,8 @@
  *
  *   Right hand X    → kick pitch (35..70 Hz)
  *   Right hand Y    → snare snap (body ↔ noise mix)
- *   Right pinch     → master low-pass filter (200 Hz .. 18 kHz, slight Q bump)
+ *   Right pinch     → master high-pass filter (20 Hz .. 4 kHz, slight Q bump)
+ *                     pinching cuts the lows out — classic "filter sweep into the drop"
  *   Right fist      → cycle to next groove (debounced)
  *
  *   Left hand X     → tempo (90..160 bpm)
@@ -118,7 +119,7 @@ const MIDI_NOTE_BY_VOICE: Record<DrumVoiceId, number> = {
 
 class DrumMachineEngine implements ModeEngine {
   private kit: DrumKit | null = null;
-  /** Master low-pass filter — what right-hand pinch sweeps. */
+  /** Master high-pass filter — what right-hand pinch sweeps. */
   private filter: Tone.Filter | null = null;
   private reverb: Tone.Reverb | null = null;
   private volume: Tone.Volume | null = null;
@@ -131,14 +132,14 @@ class DrumMachineEngine implements ModeEngine {
   private muted = false;
   private started = false;
   /** Cached cutoff for the overlay meter. */
-  private cutoffHz = 18000;
+  private cutoffHz = 20;
 
   async start(): Promise<void> {
     if (this.started) return;
     await Tone.start();
 
     this.kit = createKit();
-    this.filter = new Tone.Filter({ frequency: 18000, Q: 0.6, type: 'lowpass', rolloff: -24 });
+    this.filter = new Tone.Filter({ frequency: 20, Q: 0.6, type: 'highpass', rolloff: -24 });
     this.reverb = new Tone.Reverb({ decay: 2.4, wet: 0.12 });
     this.volume = new Tone.Volume(-3);
     this.kit.bus.chain(this.filter, this.reverb, this.volume, Tone.getDestination());
@@ -185,10 +186,11 @@ class DrumMachineEngine implements ModeEngine {
       this.kit.kick.pitch = expMap(1 - right.centroid.x, 0, 1, 35, 70);
       // Y inverted → snare snap.
       this.kit.snare.snap = clamp(linMap(1 - right.centroid.y, 0, 1, 0, 1), 0, 1);
-      // Pinch → master low-pass cutoff. Closed pinch = dark/closed, open hand =
-      // wide open. Tiny resonance bump near the top for that "filter sweep
-      // into the drop" feel.
-      this.cutoffHz = expMap(right.pinch, 0, 1, 200, 18000);
+      // Pinch → master high-pass cutoff. Open hand = no filtering (lows
+      // pass through, full kit). Pinching closed = HPF sweeps up, cutting
+      // out the bass — the classic "filter sweep into the drop" move.
+      // Tiny resonance bump near the top adds a riser-like emphasis.
+      this.cutoffHz = expMap(right.pinch, 0, 1, 20, 4000);
       this.filter.frequency.rampTo(this.cutoffHz, 0.05, now);
       this.filter.Q.rampTo(linMap(right.pinch, 0, 1, 0.6, 2.5), 0.1, now);
 
@@ -390,7 +392,7 @@ function drawOverlay({ ctx, width, height }: ModeOverlayProps): void {
   ctx.font = '11px ui-monospace, Menlo, monospace';
   ctx.fillText(`KICK PITCH ${Math.round(view.kickPitch)} Hz`, meterX + 10, meterY + 18);
   ctx.fillText(`SNARE SNAP ${(view.snareSnap * 100).toFixed(0)}%`, meterX + 10, meterY + 36);
-  ctx.fillText(`LP CUTOFF  ${Math.round(view.cutoffHz)} Hz`, meterX + 10, meterY + 54);
+  ctx.fillText(`HP CUTOFF  ${Math.round(view.cutoffHz)} Hz`, meterX + 10, meterY + 54);
 
   ctx.restore();
 }
@@ -398,7 +400,7 @@ function drawOverlay({ ctx, width, height }: ModeOverlayProps): void {
 export const drumMachineMode: ModeDescriptor = {
   id: 'drumMachine',
   name: 'Drum Machine',
-  hint: 'Right hand: X = kick pitch, Y = snare snap, pinch = LP filter, fist = next pattern. Left hand: X = tempo, Y = hat brightness, pinch = reverb, fist = mute.',
+  hint: 'Right hand: X = kick pitch, Y = snare snap, pinch = HP filter (cuts lows), fist = next pattern. Left hand: X = tempo, Y = hat brightness, pinch = reverb, fist = mute.',
   createEngine,
   drawOverlay,
   handColors: { left: '#ffd166', right: '#06d6a0' },

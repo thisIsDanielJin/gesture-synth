@@ -18,10 +18,10 @@ Both hands shape a continuously evolving chord. **Distance between hands** cross
 
 A 16-step × 6-voice synthesized drum machine (kick, snare, clap, closed hat, open hat, tom — all generated, no samples). Five preset grooves ship in: **House, Techno, Breaks, Halftime, TwoStep**. Hands sculpt the kit, not the steps:
 
-- **Right hand**: X = kick pitch, Y = snare snap, pinch = master low-pass filter (200 Hz – 18 kHz with a touch of resonance for "filter sweep into the drop"), fist = next pattern.
+- **Right hand**: X = kick pitch, Y = snare snap, pinch = master high-pass filter (20 Hz – 4 kHz with a touch of resonance — pinching cuts the lows out for the classic "filter sweep into the drop"), fist = next pattern.
 - **Left hand**: X = tempo, Y = hat brightness (closed + open), pinch = reverb, fist = mute.
 
-Visual: 6-row grid showing every voice's hits with the playhead column pulsing white; live meters for kick pitch, snare snap, low-pass cutoff in the top-left.
+Visual: 6-row grid showing every voice's hits with the playhead column pulsing white; live meters for kick pitch, snare snap, high-pass cutoff in the top-left.
 
 ## MIDI out (Ableton, VCV Rack, hardware…)
 
@@ -34,7 +34,7 @@ Per-mode MIDI channels (configurable in code, `src/midi/mapping.ts`):
 | Theremin     | 1       | Held note tracks pitch; CC 11 = expression (volume), CC 1 = mod (vibrato). |
 | Pad Sculptor | 2       | Chord notes retrigger on change; CC 74 / 93 = filter / reverb.             |
 | Sequencer    | 3       | Pattern notes; CC 74 / 71 / 76 = cutoff / res / drive; CC 91 / 93 = delay / reverb. |
-| Drum Machine | 10      | GM drum map (kick = C1 / 36, snare = D1 / 38, etc.); CC 74 = master LPF cutoff. |
+| Drum Machine | 10      | GM drum map (kick = C1 / 36, snare = D1 / 38, etc.); CC 74 = master HPF cutoff. |
 
 CCs follow the conventional MIDI spec where possible (74 = cutoff, 71 = resonance, 91 = delay, 93 = reverb, 1 = mod, 11 = expression) so factory templates often "just work". CCs are throttled to ~60 Hz to avoid flooding slow gear.
 
