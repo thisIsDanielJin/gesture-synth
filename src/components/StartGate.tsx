@@ -34,8 +34,9 @@ function Modes(): ReactNode {
         pinch = shimmer, fist = freeze.
       </li>
       <li>
-        <strong>Sequencer</strong> — circular 8-step loop. Right hand picks a
-        step, pinch toggles it; left hand sets tempo + filter.
+        <strong>Sequencer</strong> — a 16-step techno bass loop. Hands sculpt
+        the synth: cutoff, resonance, drive, tempo, delay, reverb. Right fist
+        cycles patterns.
       </li>
     </ul>
   );

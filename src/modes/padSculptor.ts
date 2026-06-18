@@ -163,10 +163,11 @@ function arraysClose(a: number[], b: number[], epsHz: number): boolean {
 
 function drawOverlay({ ctx, width, height, left, right }: ModeOverlayProps): void {
   ctx.save();
-  ctx.translate(width, 0);
-  ctx.scale(-1, 1);
+  // Canvas is already mirrored by CSS.
 
   if (left && right) {
+    // Overlay reads centroid.x which is mirrored for mapping; flip back so
+    // the cloud lands on the visible hands.
     const lx = (1 - left.centroid.x) * width;
     const ly = left.centroid.y * height;
     const rx = (1 - right.centroid.x) * width;

@@ -16,7 +16,12 @@ Both hands shape a continuously evolving chord. **Distance between hands** cross
 
 ### 🔁 Sequencer
 
-A circular 8-step loop runs as soon as you switch in. **Right hand** is a cursor: angle around the center picks one of 8 steps; distance from center picks the pitch (10-note A-minor pentatonic, two octaves). **Pinching** the right hand toggles the hovered step on/off; **closing it into a fist** clears every step. **Left hand**: X drives tempo (60–160 bpm), pinch sweeps the low-pass filter, fist mutes. Visual: glowing ring of 8 cells, white outline pulses on the playhead, ripples emit on triggered cells, magenta diamond highlights the hovered step.
+A 16-step techno bass loop in the style of a Doepfer A-155 / TB-303 acid line — fixed pattern with notes, gates, accents, and slides; runs continuously the moment you switch in. Three preset patterns ship in (Drift, Pulse, Acid). The hands sculpt the synth, not the steps:
+
+- **Right hand**: X = filter cutoff, Y = resonance, pinch = drive (overdrive), fist = cycle to next pattern.
+- **Left hand**: X = tempo (90–160 bpm), Y = delay feedback, pinch = reverb wet, fist = mute.
+
+Visual: 16-step strip across the bottom showing each step's note pitch (bar height), accents (magenta vs teal), and slides (gold tick); the playhead cell pulses white. Top-left meter shows live cutoff + resonance.
 
 ## Run it
 
@@ -43,7 +48,7 @@ Vitest + jsdom + Testing Library. Coverage:
 - `gestureStore.test.ts` — Zustand actions
 - `theremin.test.ts` — scale spans, snapping, A4 = 440 Hz
 - `padSculptor.test.ts` — voicing crossfade endpoints + monotonicity
-- `sequencer.test.ts` — angle/radius cursor math, pinch threshold
+- `sequencer.test.ts` — pattern shape (16 steps, accents+slides present, unique names), midiToFreq
 
 The MediaPipe + camera path is exercised manually in the browser, not in CI.
 

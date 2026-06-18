@@ -138,9 +138,7 @@ function drawOverlay({ ctx, width, height, left, right }: ModeOverlayProps): voi
   const usableLeft = width * 0.05;
   const usableRight = width * 0.95;
   ctx.save();
-  // Mirror so coordinates match the mirrored video.
-  ctx.translate(width, 0);
-  ctx.scale(-1, 1);
+  // Canvas is already mirrored by CSS, so draw in landmark coordinates.
 
   ctx.lineWidth = 1;
   for (let i = 0; i < ALL_SCALE_MIDI.length; i++) {
@@ -158,6 +156,8 @@ function drawOverlay({ ctx, width, height, left, right }: ModeOverlayProps): voi
 
   // Right-hand pitch indicator: thick glowing line + halo.
   if (right) {
+    // Overlay reads centroid.x which is already mirrored for param mapping;
+    // flip back so the halo lands on the visible hand.
     const handX = (1 - right.centroid.x) * width;
     const handY = right.centroid.y * height;
     const continuousMidi = linMap(1 - right.centroid.y, 0, 1, MIN_MIDI, MAX_MIDI);

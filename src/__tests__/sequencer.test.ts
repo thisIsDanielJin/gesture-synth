@@ -1,62 +1,52 @@
 import { describe, it, expect } from 'vitest';
-import { _internal, STEPS, PINCH_TOGGLE_THRESHOLD } from '../modes/sequencer';
+import { _internal, STEPS } from '../modes/sequencer';
 
-const { angleToStep, radiusToPitchIndex, PITCHES_HZ } = _internal;
+const { PATTERNS, midiToFreq } = _internal;
 
-describe('sequencer: angleToStep', () => {
-  it('returns step 0 when hand is directly above center', () => {
-    expect(angleToStep({ x: 0.5, y: 0.2 })).toBe(0);
+describe('sequencer: presets', () => {
+  it('exposes at least 2 patterns', () => {
+    expect(PATTERNS.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('returns the right (3 o\'clock) quadrant ≈ steps 1 or 2', () => {
-    const s = angleToStep({ x: 0.8, y: 0.5 });
-    expect(s).toBeGreaterThanOrEqual(1);
-    expect(s).toBeLessThanOrEqual(2);
-  });
-
-  it('returns step 4 (south) when hand is directly below center', () => {
-    expect(angleToStep({ x: 0.5, y: 0.8 })).toBe(4);
-  });
-
-  it('returns the left (9 o\'clock) quadrant ≈ steps 5 or 6', () => {
-    const s = angleToStep({ x: 0.2, y: 0.5 });
-    expect(s).toBeGreaterThanOrEqual(5);
-    expect(s).toBeLessThanOrEqual(6);
-  });
-
-  it('always falls inside [0, STEPS)', () => {
-    for (let i = 0; i < 100; i++) {
-      const x = (i % 13) / 13;
-      const y = (i % 7) / 7;
-      const s = angleToStep({ x, y });
-      expect(s).toBeGreaterThanOrEqual(0);
-      expect(s).toBeLessThan(STEPS);
+  it('every pattern has exactly STEPS steps', () => {
+    for (const p of PATTERNS) {
+      expect(p.steps.length).toBe(STEPS);
     }
   });
+
+  it('every step has the required shape', () => {
+    for (const p of PATTERNS) {
+      for (const s of p.steps) {
+        expect(s).toHaveProperty('note');
+        expect(s).toHaveProperty('gate');
+        expect(s).toHaveProperty('accent');
+        expect(s).toHaveProperty('slide');
+        if (s.note !== null) expect(typeof s.note).toBe('number');
+        expect(s.gate).toBeGreaterThanOrEqual(0);
+        expect(s.gate).toBeLessThanOrEqual(1);
+      }
+    }
+  });
+
+  it('at least one accent and one slide per pattern (not boring)', () => {
+    for (const p of PATTERNS) {
+      expect(p.steps.some((s) => s.accent)).toBe(true);
+      expect(p.steps.some((s) => s.slide)).toBe(true);
+    }
+  });
+
+  it('pattern names are unique', () => {
+    const names = new Set(PATTERNS.map((p) => p.name));
+    expect(names.size).toBe(PATTERNS.length);
+  });
 });
 
-describe('sequencer: radiusToPitchIndex', () => {
-  it('clamps to 0 when very close to center', () => {
-    expect(radiusToPitchIndex({ x: 0.5, y: 0.5 })).toBe(0);
+describe('sequencer: midiToFreq', () => {
+  it('A4 = 440 Hz', () => {
+    expect(midiToFreq(69)).toBeCloseTo(440, 5);
   });
 
-  it('clamps to last index when far from center', () => {
-    const idx = radiusToPitchIndex({ x: 0.95, y: 0.5 });
-    expect(idx).toBe(PITCHES_HZ.length - 1);
-  });
-
-  it('is monotonic with distance from center', () => {
-    const a = radiusToPitchIndex({ x: 0.6, y: 0.5 });
-    const b = radiusToPitchIndex({ x: 0.7, y: 0.5 });
-    const c = radiusToPitchIndex({ x: 0.85, y: 0.5 });
-    expect(a).toBeLessThanOrEqual(b);
-    expect(b).toBeLessThanOrEqual(c);
-  });
-});
-
-describe('sequencer: pinch threshold', () => {
-  it('is set to a value that requires intentional pinch', () => {
-    expect(PINCH_TOGGLE_THRESHOLD).toBeGreaterThan(0.5);
-    expect(PINCH_TOGGLE_THRESHOLD).toBeLessThan(1);
+  it('A1 (33) = 55 Hz', () => {
+    expect(midiToFreq(33)).toBeCloseTo(55, 1);
   });
 });

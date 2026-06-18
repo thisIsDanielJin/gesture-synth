@@ -4,7 +4,7 @@ import type { Hand } from '../utils/gestures';
 import type { HandState } from '../state/gestureStore';
 import type { ModeDescriptor } from '../modes/types';
 import {
-  drawGlowSkeleton,
+  drawSkeleton,
   DEFAULT_LEFT_COLOR,
   DEFAULT_RIGHT_COLOR,
 } from '../utils/skeleton';
@@ -47,8 +47,9 @@ export function CameraView({ enabled, mode, leftRef, rightRef }: Props) {
         const ctx = canvas.getContext('2d');
         if (ctx) {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
-          // Additive blend makes overlapping glows feel hot.
-          ctx.globalCompositeOperation = 'lighter';
+
+          // The canvas is already mirrored by CSS. Mode overlays + skeleton
+          // draw in the same landmark coordinate space the engine sees.
 
           // 1) Mode visualization underneath the skeleton.
           mode.drawOverlay({
@@ -59,35 +60,25 @@ export function CameraView({ enabled, mode, leftRef, rightRef }: Props) {
             right: rightRef.current,
           });
 
-          // 2) Glowing hands on top, mirrored to match the camera flip.
+          // 2) Skeleton on top.
           const colors = mode.handColors ?? {
             left: DEFAULT_LEFT_COLOR,
             right: DEFAULT_RIGHT_COLOR,
           };
-          ctx.save();
-          ctx.translate(canvas.width, 0);
-          ctx.scale(-1, 1);
-          const t = performance.now();
-          drawGlowSkeleton({
+          drawSkeleton({
             ctx,
             hand: latestRef.current.left,
             color: colors.left,
             width: canvas.width,
             height: canvas.height,
-            timeMs: t,
-            phaseOffset: 0,
           });
-          drawGlowSkeleton({
+          drawSkeleton({
             ctx,
             hand: latestRef.current.right,
             color: colors.right,
             width: canvas.width,
             height: canvas.height,
-            timeMs: t,
-            phaseOffset: Math.PI / 2,
           });
-          ctx.restore();
-          ctx.globalCompositeOperation = 'source-over';
         }
       }
       raf = requestAnimationFrame(draw);
