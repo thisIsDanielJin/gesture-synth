@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
+import * as Tone from 'tone';
 import { CameraView } from './components/CameraView';
 import { ModePicker } from './components/ModePicker';
+import { MidiPanel } from './components/MidiPanel';
 import { StartGate } from './components/StartGate';
 import { useGestureStore } from './state/gestureStore';
 import { ALL_MODES, DEFAULT_MODE_ID, MODES_BY_ID } from './modes';
@@ -65,6 +67,16 @@ export default function App() {
   const right = useGestureStore((s) => s.right);
   const currentMode = MODES_BY_ID[modeId] ?? ALL_MODES[0];
 
+  // Live BPM for the MIDI clock subscription.
+  const [bpm, setBpm] = useState(120);
+  useEffect(() => {
+    if (!running) return;
+    const id = window.setInterval(() => {
+      setBpm(Math.round(Tone.getTransport().bpm.value));
+    }, 250);
+    return () => window.clearInterval(id);
+  }, [running]);
+
   return (
     <div className="app-shell">
       <CameraView enabled={running} mode={currentMode} leftRef={leftRef} rightRef={rightRef} />
@@ -75,7 +87,10 @@ export default function App() {
             <span className={`pill ${left ? 'active' : ''}`}>L {left ? '●' : '○'}</span>
             <span className={`pill ${right ? 'active' : ''}`}>R {right ? '●' : '○'}</span>
           </div>
-          <ModePicker current={modeId} onChange={setModeId} />
+          <div className="top-right-stack">
+            <MidiPanel bpm={bpm} />
+            <ModePicker current={modeId} onChange={setModeId} />
+          </div>
           <div className="mode-hint-bar">{currentMode.hint}</div>
         </>
       )}

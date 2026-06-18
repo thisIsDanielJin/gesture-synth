@@ -43,4 +43,4 @@ export interface ModeDescriptor {
   handColors?: { left: string; right: string };
 }
 
-export type ModeId = 'theremin' | 'padSculptor' | 'sequencer';
+export type ModeId = 'theremin' | 'padSculptor' | 'sequencer' | 'drumMachine';

@@ -131,13 +131,23 @@ kbd {
 .pill.active { color: var(--accent); border-color: var(--accent); }
 .pill.muted  { color: var(--danger); border-color: var(--danger); }
 
-/* ---------- Mode picker ---------- */
+/* ---------- Top-right stack (MIDI + Mode) ---------- */
 
-.mode-picker {
+.top-right-stack {
   position: absolute;
   top: 24px;
   right: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
   z-index: 20;
+}
+
+/* ---------- Mode picker ---------- */
+
+.mode-picker {
+  position: relative;
 }
 
 .mode-pill {
@@ -232,4 +242,103 @@ kbd {
   max-width: 80vw;
   text-align: center;
   z-index: 10;
+}
+
+/* ---------- MIDI panel ---------- */
+
+.midi-panel {
+  position: relative;
+}
+
+.midi-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(20, 23, 31, 0.85);
+  border: 1px solid #2a2f44;
+  color: var(--muted);
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  backdrop-filter: blur(8px);
+}
+.midi-pill:hover { border-color: var(--accent); color: var(--fg); }
+.midi-pill.active { color: var(--accent); border-color: var(--accent); }
+.midi-pill.disabled { opacity: 0.5; cursor: not-allowed; }
+
+.midi-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #555;
+}
+.midi-dot.on {
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+}
+.midi-caret { font-size: 10px; }
+
+.midi-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 280px;
+  background: var(--bg-elev);
+  border: 1px solid #2a2f44;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px);
+  font-size: 12.5px;
+}
+
+.midi-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  color: var(--fg);
+}
+.midi-row select {
+  flex: 1;
+  background: var(--bg-elev2);
+  border: 1px solid #2a2f44;
+  color: var(--fg);
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+.midi-row input[type="checkbox"] {
+  width: 16px; height: 16px;
+  accent-color: var(--accent);
+}
+
+.midi-hint {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.45;
+  padding-top: 4px;
+  border-top: 1px solid #232838;
+}
+
+.midi-panic {
+  background: transparent;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+}
+.midi-panic:hover:not(:disabled) { background: rgba(255,93,108,0.1); }
+.midi-panic:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.midi-error {
+  font-size: 11px;
+  color: var(--danger);
 }

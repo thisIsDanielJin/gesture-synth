@@ -19,6 +19,8 @@ import * as Tone from 'tone';
 import type { HandState } from '../state/gestureStore';
 import type { ModeEngine, ModeDescriptor, ModeOverlayProps } from './types';
 import { clamp, expMap, linMap } from '../utils/mapping';
+import { sendCc, sendNoteOn, sendNoteOff } from '../midi/out';
+import { getModeMidiChannels, CC } from '../midi/mapping';
 
 // A minor pentatonic in MIDI numbers across A2..A5 (33..81).
 const SCALE_INTERVALS = [0, 3, 5, 7, 10]; // semitone offsets within an octave
@@ -61,6 +63,8 @@ class ThereminEngine implements ModeEngine {
   private volume: Tone.Volume | null = null;
   private started = false;
   private noteHeld = false;
+  /** Last MIDI note we sent on (so we know when to swap notes during glide). */
+  private currentMidiNote: number | null = null;
 
   async start(): Promise<void> {
     if (this.started) return;
@@ -104,9 +108,26 @@ class ThereminEngine implements ModeEngine {
       // Volume from right pinch.
       const vol = linMap(right.pinch, 0, 1, -30, 0);
       this.volume.volume.rampTo(vol, 0.05, now);
+
+      // ---- MIDI ----
+      const ch = getModeMidiChannels().theremin;
+      if (ch !== null) {
+        const midiNote = Math.round(targetMidi);
+        if (this.currentMidiNote !== midiNote) {
+          if (this.currentMidiNote !== null) sendNoteOff(ch, this.currentMidiNote);
+          sendNoteOn(ch, midiNote, 100);
+          this.currentMidiNote = midiNote;
+        }
+        sendCc(ch, CC.expression, linMap(right.pinch, 0, 1, 0, 127));
+      }
     } else if (this.noteHeld) {
       this.synth.triggerRelease(now);
       this.noteHeld = false;
+      const ch = getModeMidiChannels().theremin;
+      if (ch !== null && this.currentMidiNote !== null) {
+        sendNoteOff(ch, this.currentMidiNote);
+        this.currentMidiNote = null;
+      }
     }
 
     // Vibrato from left hand X (mirrored — moving left increases). Fist disables.
@@ -115,6 +136,8 @@ class ThereminEngine implements ModeEngine {
       const depth = linMap(1 - left.centroid.x, 0, 1, 0.02, 0.18);
       this.vibrato.frequency.rampTo(rate, 0.1, now);
       this.vibrato.depth.rampTo(depth, 0.1, now);
+      const ch = getModeMidiChannels().theremin;
+      if (ch !== null) sendCc(ch, CC.modulation, linMap(rate, 0, 10, 0, 127));
     } else {
       this.vibrato.frequency.rampTo(0, 0.1, now);
     }
@@ -123,6 +146,11 @@ class ThereminEngine implements ModeEngine {
   dispose(): void {
     if (!this.started) return;
     if (this.noteHeld) this.synth?.triggerRelease();
+    const ch = getModeMidiChannels().theremin;
+    if (ch !== null && this.currentMidiNote !== null) {
+      sendNoteOff(ch, this.currentMidiNote);
+    }
+    this.currentMidiNote = null;
     this.synth?.dispose();
     this.vibrato?.dispose();
     this.reverb?.dispose();

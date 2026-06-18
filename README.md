@@ -14,14 +14,29 @@ The classic. Right hand height = pitch, snapped to A-minor pentatonic across fou
 
 Both hands shape a continuously evolving chord. **Distance between hands** crossfades through three voicings: close = tight cluster, medium = minor 9, wide = bright maj9 spread. **Average height** sets the octave. **Pinch** (either hand) brings up shimmer reverb + opens the filter. **Closed fist** freezes the chord so you can sculpt the texture without the chord moving. Visual: soft cloud bloom that grows with hand spread and shifts hue with chord brightness; dashed ring when frozen.
 
-### 🔁 Sequencer
+### 🥁 Drum Machine
 
-A 16-step techno bass loop in the style of a Doepfer A-155 / TB-303 acid line — fixed pattern with notes, gates, accents, and slides; runs continuously the moment you switch in. Three preset patterns ship in (Drift, Pulse, Acid). The hands sculpt the synth, not the steps:
+A 16-step × 6-voice synthesized drum machine (kick, snare, clap, closed hat, open hat, tom — all generated, no samples). Five preset grooves ship in: **House, Techno, Breaks, Halftime, TwoStep**. Hands sculpt the kit, not the steps:
 
-- **Right hand**: X = filter cutoff, Y = resonance, pinch = drive (overdrive), fist = cycle to next pattern.
-- **Left hand**: X = tempo (90–160 bpm), Y = delay feedback, pinch = reverb wet, fist = mute.
+- **Right hand**: X = kick pitch, Y = snare snap, pinch = master low-pass filter (200 Hz – 18 kHz with a touch of resonance for "filter sweep into the drop"), fist = next pattern.
+- **Left hand**: X = tempo, Y = hat brightness (closed + open), pinch = reverb, fist = mute.
 
-Visual: 16-step strip across the bottom showing each step's note pitch (bar height), accents (magenta vs teal), and slides (gold tick); the playhead cell pulses white. Top-left meter shows live cutoff + resonance.
+Visual: 6-row grid showing every voice's hits with the playhead column pulsing white; live meters for kick pitch, snare snap, low-pass cutoff in the top-left.
+
+## MIDI out (Ableton, VCV Rack, hardware…)
+
+Click the **MIDI** pill in the top-right, allow the browser permission, pick your device, optionally enable **Send clock**. Local Tone.js audio still plays — your DAW receives the same thing.
+
+Per-mode MIDI channels (configurable in code, `src/midi/mapping.ts`):
+
+| Mode         | Channel | Notes / CCs                                                                |
+|--------------|---------|----------------------------------------------------------------------------|
+| Theremin     | 1       | Held note tracks pitch; CC 11 = expression (volume), CC 1 = mod (vibrato). |
+| Pad Sculptor | 2       | Chord notes retrigger on change; CC 74 / 93 = filter / reverb.             |
+| Sequencer    | 3       | Pattern notes; CC 74 / 71 / 76 = cutoff / res / drive; CC 91 / 93 = delay / reverb. |
+| Drum Machine | 10      | GM drum map (kick = C1 / 36, snare = D1 / 38, etc.); CC 74 = master LPF cutoff. |
+
+CCs follow the conventional MIDI spec where possible (74 = cutoff, 71 = resonance, 91 = delay, 93 = reverb, 1 = mod, 11 = expression) so factory templates often "just work". CCs are throttled to ~60 Hz to avoid flooding slow gear.
 
 ## Run it
 
@@ -48,7 +63,9 @@ Vitest + jsdom + Testing Library. Coverage:
 - `gestureStore.test.ts` — Zustand actions
 - `theremin.test.ts` — scale spans, snapping, A4 = 440 Hz
 - `padSculptor.test.ts` — voicing crossfade endpoints + monotonicity
-- `sequencer.test.ts` — pattern shape (16 steps, accents+slides present, unique names), midiToFreq
+- `sequencer.test.ts` — pattern shape, midiToFreq
+- `drumMachine.test.ts` — pattern shape, GM drum note mapping
+- `midiOut.test.ts` — Web MIDI helpers: clamp, channel, throttle, panic
 
 The MediaPipe + camera path is exercised manually in the browser, not in CI.
 
@@ -79,11 +96,13 @@ Switching mode disposes the old engine and instantiates the new one. The store i
 
 ## Roadmap
 
-- [ ] More modes: Granular Stretcher, Drum Loom (multi-row sequencer)
-- [ ] Web MIDI CC out adapter (Ableton, any DAW that listens to a virtual MIDI bus)
-- [ ] VCV Rack via macOS IAC bus
+- [ ] Master shared transport so multiple modes can layer
+- [ ] Audio-reactive background + hand motion trails
+- [ ] Live looper (bar-quantized capture, layer up to 4 loops)
+- [ ] Key / scale picker shared across modes
+- [ ] OSC over WebSocket for native VCV Rack integration
 - [ ] Per-mode parameter overrides (root, scale, voicing palette)
-- [ ] Preset save / recall
+- [ ] Preset save / recall (localStorage)
 
 ## Stack
 

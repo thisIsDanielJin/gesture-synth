@@ -19,6 +19,8 @@ import * as Tone from 'tone';
 import type { HandState } from '../state/gestureStore';
 import type { ModeEngine, ModeDescriptor, ModeOverlayProps } from './types';
 import { clamp, dist, linMap } from '../utils/mapping';
+import { sendCc, sendNoteOn, sendNoteOff } from '../midi/out';
+import { getModeMidiChannels, CC } from '../midi/mapping';
 
 // Voicings as semitone offsets from the root.
 type Voicing = readonly [number, number, number, number];
@@ -62,6 +64,8 @@ class PadSculptorEngine implements ModeEngine {
   private volume: Tone.Volume | null = null;
   private started = false;
   private heldFreqs: number[] = [];
+  /** MIDI notes currently sounding (so we can release on chord change). */
+  private heldMidi: number[] = [];
   private frozen = false;
 
   async start(): Promise<void> {
@@ -116,7 +120,8 @@ class PadSculptorEngine implements ModeEngine {
     const voicing = blendedVoicing(widthT);
     const octave = Math.round(linMap(1 - avgY, 0, 1, 2, 5));
     const rootMidi = ROOT_PC + 12 * octave;
-    const targetFreqs = voicing.map((iv) => midiToFreq(rootMidi + iv));
+    const targetMidi = voicing.map((iv) => rootMidi + iv);
+    const targetFreqs = targetMidi.map(midiToFreq);
 
     // If chord changed enough, retrigger.
     if (!arraysClose(targetFreqs, this.heldFreqs, 0.5)) {
@@ -126,6 +131,14 @@ class PadSculptorEngine implements ModeEngine {
         now,
       );
       this.heldFreqs = targetFreqs;
+
+      // MIDI: release the previous chord, send the new one.
+      const ch = getModeMidiChannels().padSculptor;
+      if (ch !== null) {
+        for (const n of this.heldMidi) sendNoteOff(ch, n);
+        for (const n of targetMidi) sendNoteOn(ch, n, 80);
+        this.heldMidi = targetMidi.slice();
+      }
     }
 
     // Shimmer / reverb wet from max pinch.
@@ -133,6 +146,13 @@ class PadSculptorEngine implements ModeEngine {
     this.reverb.wet.rampTo(linMap(pinch, 0, 1, 0.2, 0.95), 0.2, now);
     this.filter!.frequency.rampTo(linMap(pinch, 0, 1, 1200, 6000), 0.3, now);
     this.volume.volume.rampTo(linMap(pinch, 0, 1, -14, -4), 0.2, now);
+
+    // MIDI CCs.
+    const ch = getModeMidiChannels().padSculptor;
+    if (ch !== null) {
+      sendCc(ch, CC.cutoff, linMap(pinch, 0, 1, 0, 127));
+      sendCc(ch, CC.reverbMix, linMap(pinch, 0, 1, 0, 127));
+    }
   }
 
   private releaseAll(now: number): void {
@@ -140,6 +160,11 @@ class PadSculptorEngine implements ModeEngine {
       this.synth.releaseAll(now);
       this.heldFreqs = [];
     }
+    const ch = getModeMidiChannels().padSculptor;
+    if (ch !== null) {
+      for (const n of this.heldMidi) sendNoteOff(ch, n);
+    }
+    this.heldMidi = [];
   }
 
   dispose(): void {

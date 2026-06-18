@@ -25,6 +25,8 @@ import * as Tone from 'tone';
 import type { HandState } from '../state/gestureStore';
 import type { ModeEngine, ModeDescriptor, ModeOverlayProps } from './types';
 import { clamp, expMap, linMap } from '../utils/mapping';
+import { sendCc, sendNoteOn, sendNoteOff } from '../midi/out';
+import { getModeMidiChannels, CC } from '../midi/mapping';
 
 export const STEPS = 16;
 
@@ -194,6 +196,14 @@ class SequencerEngine implements ModeEngine {
         }
         this.synth?.triggerAttackRelease(freq, dur, time, vel);
         this.lastTriggerAt[stepIdx] = performance.now();
+
+        // MIDI: send the same note on the sequencer channel.
+        const ch = getModeMidiChannels().sequencer;
+        if (ch !== null) {
+          const midiVel = step.accent ? 110 : 88;
+          sendNoteOn(ch, step.note, midiVel, time);
+          sendNoteOff(ch, step.note, time + dur);
+        }
       },
       Array.from({ length: STEPS }, (_, i) => i),
       '16n',
@@ -221,6 +231,14 @@ class SequencerEngine implements ModeEngine {
       this.drive.distortion = clamp(linMap(right.pinch, 0, 1, 0, 0.85), 0, 0.85);
       this.drive.wet.rampTo(linMap(right.pinch, 0, 1, 0.2, 0.85), 0.1, now);
 
+      // MIDI CCs.
+      const ch = getModeMidiChannels().sequencer;
+      if (ch !== null) {
+        sendCc(ch, CC.cutoff, linMap(x, 0, 1, 0, 127));
+        sendCc(ch, CC.resonance, linMap(1 - y, 0, 1, 0, 127));
+        sendCc(ch, CC.drive, linMap(right.pinch, 0, 1, 0, 127));
+      }
+
       if (right.fist && realNow - this.lastFistAt > FIST_COOLDOWN_MS) {
         this.patternIdx = (this.patternIdx + 1) % PATTERNS.length;
         this.lastFistAt = realNow;
@@ -234,6 +252,12 @@ class SequencerEngine implements ModeEngine {
       Tone.getTransport().bpm.rampTo(bpm, 0.2, now);
       this.delay.feedback.rampTo(linMap(1 - left.centroid.y, 0, 1, 0, 0.7), 0.1, now);
       this.reverb.wet.rampTo(linMap(left.pinch, 0, 1, 0, 0.6), 0.2, now);
+
+      const ch = getModeMidiChannels().sequencer;
+      if (ch !== null) {
+        sendCc(ch, CC.delayMix, linMap(1 - left.centroid.y, 0, 1, 0, 127));
+        sendCc(ch, CC.reverbMix, linMap(left.pinch, 0, 1, 0, 127));
+      }
 
       const wantMute = left.fist;
       if (wantMute !== this.muted) {

@@ -34,8 +34,14 @@ function Modes(): ReactNode {
         pinch = shimmer, fist = freeze.
       </li>
       <li>
-        <strong>Sequencer</strong> — a 16-step techno bass loop. Hands sculpt
-        the synth: cutoff, resonance, drive, tempo, delay, reverb. Right fist
+        <strong>Sequencer</strong> — 16-step techno bass loop. Hands sculpt
+        cutoff, resonance, drive, tempo, delay, reverb. Right fist cycles
+        patterns.
+      </li>
+      <li>
+        <strong>Drum Machine</strong> — 16-step grid across 6 voices, 5
+        preset grooves. Right hand: kick pitch, snare snap, low-pass
+        filter. Left hand: tempo, hat brightness, reverb. Right fist
         cycles patterns.
       </li>
     </ul>
