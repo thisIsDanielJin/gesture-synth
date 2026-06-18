@@ -39,6 +39,8 @@ export interface ModeDescriptor {
   createEngine: () => ModeEngine;
   /** Pure draw, called every animation frame after the camera/skeleton layer. */
   drawOverlay: (props: ModeOverlayProps) => void;
+  /** Optional hand colors (hex). Falls back to defaults. */
+  handColors?: { left: string; right: string };
 }
 
-export type ModeId = 'theremin' | 'padSculptor';
+export type ModeId = 'theremin' | 'padSculptor' | 'sequencer';

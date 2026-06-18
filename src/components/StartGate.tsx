@@ -33,6 +33,10 @@ function Modes(): ReactNode {
         <strong>Pad Sculptor</strong> — both hands. Spread = chord brightness,
         pinch = shimmer, fist = freeze.
       </li>
+      <li>
+        <strong>Sequencer</strong> — circular 8-step loop. Right hand picks a
+        step, pinch toggles it; left hand sets tempo + filter.
+      </li>
     </ul>
   );
 }

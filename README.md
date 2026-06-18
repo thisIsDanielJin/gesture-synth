@@ -14,6 +14,10 @@ The classic. Right hand height = pitch, snapped to A-minor pentatonic across fou
 
 Both hands shape a continuously evolving chord. **Distance between hands** crossfades through three voicings: close = tight cluster, medium = minor 9, wide = bright maj9 spread. **Average height** sets the octave. **Pinch** (either hand) brings up shimmer reverb + opens the filter. **Closed fist** freezes the chord so you can sculpt the texture without the chord moving. Visual: soft cloud bloom that grows with hand spread and shifts hue with chord brightness; dashed ring when frozen.
 
+### 🔁 Sequencer
+
+A circular 8-step loop runs as soon as you switch in. **Right hand** is a cursor: angle around the center picks one of 8 steps; distance from center picks the pitch (10-note A-minor pentatonic, two octaves). **Pinching** the right hand toggles the hovered step on/off; **closing it into a fist** clears every step. **Left hand**: X drives tempo (60–160 bpm), pinch sweeps the low-pass filter, fist mutes. Visual: glowing ring of 8 cells, white outline pulses on the playhead, ripples emit on triggered cells, magenta diamond highlights the hovered step.
+
 ## Run it
 
 ```bash
@@ -39,6 +43,7 @@ Vitest + jsdom + Testing Library. Coverage:
 - `gestureStore.test.ts` — Zustand actions
 - `theremin.test.ts` — scale spans, snapping, A4 = 440 Hz
 - `padSculptor.test.ts` — voicing crossfade endpoints + monotonicity
+- `sequencer.test.ts` — angle/radius cursor math, pinch threshold
 
 The MediaPipe + camera path is exercised manually in the browser, not in CI.
 
@@ -69,7 +74,7 @@ Switching mode disposes the old engine and instantiates the new one. The store i
 
 ## Roadmap
 
-- [ ] More modes: Beat Loom (8-step grid), Granular Stretcher
+- [ ] More modes: Granular Stretcher, Drum Loom (multi-row sequencer)
 - [ ] Web MIDI CC out adapter (Ableton, any DAW that listens to a virtual MIDI bus)
 - [ ] VCV Rack via macOS IAC bus
 - [ ] Per-mode parameter overrides (root, scale, voicing palette)

@@ -3,20 +3,16 @@ import { useHandTracking } from '../vision/useHandTracking';
 import type { Hand } from '../utils/gestures';
 import type { HandState } from '../state/gestureStore';
 import type { ModeDescriptor } from '../modes/types';
-
-const HAND_CONNECTIONS: Array<[number, number]> = [
-  [0, 1], [1, 2], [2, 3], [3, 4],
-  [0, 5], [5, 6], [6, 7], [7, 8],
-  [5, 9], [9, 10], [10, 11], [11, 12],
-  [9, 13], [13, 14], [14, 15], [15, 16],
-  [13, 17], [17, 18], [18, 19], [19, 20],
-  [0, 17],
-];
+import {
+  drawGlowSkeleton,
+  DEFAULT_LEFT_COLOR,
+  DEFAULT_RIGHT_COLOR,
+} from '../utils/skeleton';
 
 interface Props {
   enabled: boolean;
   mode: ModeDescriptor;
-  /** Optional live state ref so the overlay reads the same data the engine sees. */
+  /** Refs the overlay reads so it stays in sync with the live store. */
   leftRef: React.RefObject<HandState | null>;
   rightRef: React.RefObject<HandState | null>;
 }
@@ -51,6 +47,8 @@ export function CameraView({ enabled, mode, leftRef, rightRef }: Props) {
         const ctx = canvas.getContext('2d');
         if (ctx) {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
+          // Additive blend makes overlapping glows feel hot.
+          ctx.globalCompositeOperation = 'lighter';
 
           // 1) Mode visualization underneath the skeleton.
           mode.drawOverlay({
@@ -61,9 +59,35 @@ export function CameraView({ enabled, mode, leftRef, rightRef }: Props) {
             right: rightRef.current,
           });
 
-          // 2) Skeleton on top.
-          drawHand(ctx, latestRef.current.left, '#6cf0c4', canvas.width, canvas.height);
-          drawHand(ctx, latestRef.current.right, '#ff7ad9', canvas.width, canvas.height);
+          // 2) Glowing hands on top, mirrored to match the camera flip.
+          const colors = mode.handColors ?? {
+            left: DEFAULT_LEFT_COLOR,
+            right: DEFAULT_RIGHT_COLOR,
+          };
+          ctx.save();
+          ctx.translate(canvas.width, 0);
+          ctx.scale(-1, 1);
+          const t = performance.now();
+          drawGlowSkeleton({
+            ctx,
+            hand: latestRef.current.left,
+            color: colors.left,
+            width: canvas.width,
+            height: canvas.height,
+            timeMs: t,
+            phaseOffset: 0,
+          });
+          drawGlowSkeleton({
+            ctx,
+            hand: latestRef.current.right,
+            color: colors.right,
+            width: canvas.width,
+            height: canvas.height,
+            timeMs: t,
+            phaseOffset: Math.PI / 2,
+          });
+          ctx.restore();
+          ctx.globalCompositeOperation = 'source-over';
         }
       }
       raf = requestAnimationFrame(draw);
@@ -78,31 +102,4 @@ export function CameraView({ enabled, mode, leftRef, rightRef }: Props) {
       <canvas ref={canvasRef} />
     </div>
   );
-}
-
-function drawHand(
-  ctx: CanvasRenderingContext2D,
-  hand: Hand | null,
-  color: string,
-  w: number,
-  h: number,
-): void {
-  if (!hand) return;
-  ctx.lineWidth = 3;
-  ctx.strokeStyle = color;
-  ctx.fillStyle = color;
-  for (const [a, b] of HAND_CONNECTIONS) {
-    const pa = hand[a];
-    const pb = hand[b];
-    if (!pa || !pb) continue;
-    ctx.beginPath();
-    ctx.moveTo(pa.x * w, pa.y * h);
-    ctx.lineTo(pb.x * w, pb.y * h);
-    ctx.stroke();
-  }
-  for (const p of hand) {
-    ctx.beginPath();
-    ctx.arc(p.x * w, p.y * h, 4, 0, Math.PI * 2);
-    ctx.fill();
-  }
 }
